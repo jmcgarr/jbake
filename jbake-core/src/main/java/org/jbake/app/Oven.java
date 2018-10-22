@@ -114,6 +114,53 @@ public class Oven {
         inspector.inspect();
     }
 
+    public void bake( File fileToBake ) {
+        JBakeConfiguration config = utensils.getConfiguration();
+        File contentFolder = config.getContentFolder();
+        File assetFolder = config.getAssetFolder();
+
+        if( isFileInFolder(contentFolder, fileToBake) ) {
+            bakeContentFile(fileToBake);
+        } else if ( isFileInFolder(assetFolder, fileToBake) ) {
+            bakeAssetFile(fileToBake);
+        } else {
+            LOGGER.info("Template or other file detected, rebaking [{}]", fileToBake.getAbsolutePath());
+            bake();
+        }
+    }
+
+    // TODO Move to utils
+    private boolean isFileInFolder( File folder, File file ) {
+        return file.getAbsolutePath().startsWith(folder.getAbsolutePath());
+    }
+
+    private void bakeContentFile( File contentFile ) {
+        ContentStore contentStore = utensils.getContentStore();
+        JBakeConfiguration config = utensils.getConfiguration();
+
+        try {
+            // Approach #1
+            // Update ContentStore with a single file and then run renderer
+            LOGGER.info("Baking a single content file change: {}", contentFile.getName());
+
+        } finally {
+            contentStore.close();
+            contentStore.shutdown();
+        }
+    }
+
+    private void bakeAssetFile( File assetFile ) {
+        final long start = new Date().getTime();
+        LOGGER.info("Baking a single asset file change: {}", assetFile.getName());
+        Asset asset = utensils.getAsset();
+        asset.copySingleAsset(assetFile);
+        if( asset.getErrors().size() > 0 ) {
+            LOGGER.info("Failed to copy asset {}", assetFile.getName());
+        }
+        long end = new Date().getTime();
+        LOGGER.info("Incremental bake finished in {}ms", end - start);
+    }
+
     /**
      * All the good stuff happens in here...
      */
@@ -134,20 +181,27 @@ public class Oven {
             contentStore.updateAndClearCacheIfNeeded(config.getClearCache(), config.getTemplateFolder());
 
             // process source content
+            final long crawlStart = new Date().getTime();
             crawler.crawl();
+            final long crawlEnd = new Date().getTime();
 
             // render content
+            final long renderStart = new Date().getTime();
             renderContent();
+            final long renderEnd = new Date().getTime();
 
             // copy assets
+            final long assetStart = new Date().getTime();
             asset.copy();
             asset.copyAssetsFromContent(config.getContentFolder());
+            final long assetEnd = new Date().getTime();
 
             errors.addAll(asset.getErrors());
 
             LOGGER.info("Baking finished!");
             long end = new Date().getTime();
             LOGGER.info("Baked {} items in {}ms", renderedCount, end - start);
+            LOGGER.info("Other timing: crawling {}ms, rendering {}ms, asset copying {}ms", crawlEnd - crawlStart, renderEnd - renderStart, assetEnd - assetStart);
             if (!errors.isEmpty()) {
                 LOGGER.error("Failed to bake {} item(s)!", errors.size());
             }

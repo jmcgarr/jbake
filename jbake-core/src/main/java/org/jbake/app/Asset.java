@@ -2,6 +2,7 @@ package org.jbake.app;
 
 import org.apache.commons.configuration.CompositeConfiguration;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.jbake.app.configuration.JBakeConfiguration;
 import org.jbake.app.configuration.JBakeConfigurationFactory;
 import org.slf4j.Logger;
@@ -71,21 +72,26 @@ public class Asset {
         copy(path, config.getDestinationFolder(), filter);
     }
 
-    private void copy(File sourceFolder, File targetFolder, final FileFilter filter) {
+    /**
+     *
+     * @param asset
+     */
+    public void copySingleAsset(File asset) {
+        File assetsFolder = config.getAssetFolder();
+        String destSubpath = StringUtils.replace(asset.getAbsolutePath(), assetsFolder.getAbsolutePath(), "");
 
+        final File target = new File(config.getDestinationFolder(), destSubpath);
+        copyFile(asset, target);
+    }
+
+    private void copy(File sourceFolder, File targetFolder, final FileFilter filter) {
         final File[] assets = sourceFolder.listFiles(filter);
         if (assets != null) {
             Arrays.sort(assets);
             for (File asset : assets) {
                 final File target = new File(targetFolder, asset.getName());
                 if (asset.isFile()) {
-                    try {
-                        FileUtils.copyFile(asset, target);
-                        LOGGER.info("Copying [{}]... done!", asset.getPath());
-                    } catch (IOException e) {
-                        LOGGER.error("Copying [{}]... failed!", asset.getPath(), e);
-                        errors.add(e);
-                    }
+                    copyFile(asset, target);
                 } else if (asset.isDirectory()) {
                     copy(asset, target, filter);
                 }
@@ -95,6 +101,16 @@ public class Asset {
 
     public void copyAssetsFromContent(File path) {
         copy(path, config.getDestinationFolder(), FileUtil.getNotContentFileFilter());
+    }
+
+    private void copyFile(File asset, File target) {
+        try {
+            FileUtils.copyFile(asset, target);
+            LOGGER.info("Copying [{}]... done!", asset.getPath());
+        } catch (IOException e) {
+            LOGGER.error("Copying [{}]... failed!", asset.getPath(), e);
+            errors.add(e);
+        }
     }
 
 

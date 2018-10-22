@@ -74,8 +74,6 @@ public class AssetTest {
 		Assert.assertTrue("Errors during asset copying", asset.getErrors().isEmpty());
 	}
 
-
-
 	/**
 	 * Primary intention is to extend test cases to increase coverage.
 	 *
@@ -150,6 +148,17 @@ public class AssetTest {
 		Assert.assertTrue("File " + jsonFile.getAbsolutePath() + " does not exist", jsonFile.exists());
 
 		Assert.assertTrue("Errors during asset copying", asset.getErrors().isEmpty());
+	}
+
+	@Test
+	public void testCopySingleAsset() {
+		URL assetUrl = this.getClass().getResource("/fixture/assets/img/glyphicons-halflings.png");
+		File assetToCopy = new File(assetUrl.getFile());
+		Asset asset = new Asset(config);
+		asset.copySingleAsset(assetToCopy);
+
+		File pngFile = new File(folder.getRoot().getPath() + File.separatorChar + File.separatorChar + "img/glyphicons-halflings.png");
+		Assert.assertTrue(pngFile.exists());
 	}
 
 	private Integer countFiles(File path){

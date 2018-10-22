@@ -1,6 +1,7 @@
 import java.text.SimpleDateFormat
 
 apply from: "$rootDir/gradle/sonarqube.gradle"
+apply plugin: 'maven-publish'
 
 description = "The core library of JBake"
 
@@ -36,3 +37,10 @@ processResources {
     }
 }
 
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+    }
+}

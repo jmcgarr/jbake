@@ -62,6 +62,7 @@ public class Crawler {
     }
 
     public void crawl() {
+        final long start = new Date().getTime();
         crawl(config.getContentFolder());
 
         LOGGER.info("Content detected:");
@@ -72,6 +73,8 @@ public class Crawler {
             }
         }
 
+        long end = new Date().getTime();
+        LOGGER.info("Crawling content assets took {}ms", end - start);
     }
 
     /**

@@ -8,18 +8,20 @@ import org.jbake.app.Renderer;
 import org.jbake.app.configuration.JBakeConfiguration;
 import org.jbake.model.DocumentTypes;
 import org.jbake.template.RenderingException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class DocumentsRenderer implements RenderingTool {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(DocumentsRenderer.class);
 
     @Override
     public int render(Renderer renderer, ContentStore db, JBakeConfiguration config) throws RenderingException {
         int renderedCount = 0;
+        final long start = new Date().getTime();
         final List<String> errors = new LinkedList<>();
         for (String docType : DocumentTypes.getDocumentTypes()) {
             DocumentList documentList = db.getUnrenderedContent(docType);
@@ -59,6 +61,8 @@ public class DocumentsRenderer implements RenderingTool {
 
             db.markContentAsRendered(docType);
         }
+        final long end = new Date().getTime();
+        LOGGER.info("Document rendering took {}ms", end - start);
         if (!errors.isEmpty()) {
             StringBuilder sb = new StringBuilder();
             sb.append("Failed to render documents. Cause(s):");
