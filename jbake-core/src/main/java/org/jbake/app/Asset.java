@@ -4,6 +4,7 @@ import org.apache.commons.configuration.CompositeConfiguration;
 import org.apache.commons.io.FileUtils;
 import org.jbake.app.configuration.JBakeConfiguration;
 import org.jbake.app.configuration.JBakeConfigurationFactory;
+import org.jbake.app.crawler.AssetCrawler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,6 +54,7 @@ public class Asset {
      * read from configuration
      */
     public void copy() {
+        AssetCrawler crawler = new AssetCrawler( this.config)
         copy(config.getAssetFolder());
     }
 

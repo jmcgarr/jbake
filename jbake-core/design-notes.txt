@@ -1,0 +1,8 @@
+
+Approach #1:
+
+- the crawler should be an interfact and abstract class
+- There should be a `ContentCrawler` and an `AssetCrawler`
+
+Approach #2:
+- Change the crawler so that it also crawls for assets to be processed.

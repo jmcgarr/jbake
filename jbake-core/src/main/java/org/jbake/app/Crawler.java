@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -30,8 +31,8 @@ public class Crawler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Crawler.class);
     public static final String URI_SEPARATOR_CHAR = "/";
-    private final ContentStore db;
-    private JBakeConfiguration config;
+    protected final ContentStore db;
+    protected JBakeConfiguration config;
     private Parser parser;
 
     /**
@@ -74,13 +75,25 @@ public class Crawler {
 
     }
 
+    protected FileFilter getFileFilter() {
+        return FileUtil.getFileFilter();
+    }
+
+    protected Map<String, Object> processFile(File sourceFile) {
+        return parser.processFile(sourceFile);
+    }
+
+    protected String[] getDocumentTypes() {
+        return DocumentTypes.getDocumentTypes();
+    }
+
     /**
      * Crawl all files and folders looking for content.
      *
      * @param path Folder to start from
      */
-    private void crawl(File path) {
-        File[] contents = path.listFiles(FileUtil.getFileFilter());
+    protected void crawl(File path) {
+        File[] contents = path.listFiles(getFileFilter());
         if (contents != null) {
             Arrays.sort(contents);
             for (File sourceFile : contents) {
@@ -91,7 +104,7 @@ public class Crawler {
                     String uri = buildURI(sourceFile);
                     boolean process = true;
                     DocumentStatus status = DocumentStatus.NEW;
-                    for (String docType : DocumentTypes.getDocumentTypes()) {
+                    for (String docType : getDocumentTypes()) {
                         status = findDocumentStatus(docType, uri, sha1);
                         if (status == DocumentStatus.UPDATED) {
                             sb.append(" : modified ");
@@ -190,7 +203,7 @@ public class Crawler {
     }
 
     private void crawlSourceFile(final File sourceFile, final String sha1, final String uri) {
-        Map<String, Object> fileContents = parser.processFile(sourceFile);
+        Map<String, Object> fileContents = processFile(sourceFile);
         if (fileContents != null) {
             fileContents.put(Attributes.ROOTPATH, getPathToRoot(sourceFile));
             fileContents.put(String.valueOf(DocumentAttributes.SHA1), sha1);

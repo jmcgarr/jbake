@@ -134,20 +134,27 @@ public class Oven {
             contentStore.updateAndClearCacheIfNeeded(config.getClearCache(), config.getTemplateFolder());
 
             // process source content
+            final long startCrawl = new Date().getTime();
             crawler.crawl();
+            final long endCrawl = new Date().getTime();
 
             // render content
+            final long startRender = new Date().getTime();
             renderContent();
+            final long endRender = new Date().getTime();
 
             // copy assets
+            final long startAsset = new Date().getTime();
             asset.copy();
             asset.copyAssetsFromContent(config.getContentFolder());
 
             errors.addAll(asset.getErrors());
+            final long endAsset = new Date().getTime();
 
             LOGGER.info("Baking finished!");
             long end = new Date().getTime();
             LOGGER.info("Baked {} items in {}ms", renderedCount, end - start);
+            LOGGER.info("crawling to {}ms, rendering took {}ms, asset copy took {}ms", endCrawl-startCrawl, endRender-startRender, endAsset-startAsset);
             if (!errors.isEmpty()) {
                 LOGGER.error("Failed to bake {} item(s)!", errors.size());
             }
